@@ -1,0 +1,22 @@
+#board {
+    border-collapse: separate; /* Отключаем схлопывание границ */
+    border-spacing: 5px; /* Добавляем пространство между ячейками */
+    margin: auto; /* Центрируем таблицу */
+}
+
+#board td {
+    width: 30px; /* Ширина ячейки */
+    height: 30px; /* Высота ячейки */
+    text-align: center;
+    vertical-align: middle;
+    background-color: #f0f0f0; /* Цвет фона ячейки */
+    cursor: pointer;
+    border: 1px solid #ddd; /* Тонкая граница вокруг каждой ячейки */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень для создания эффекта глубины */
+    transition: background-color 0.3s, box-shadow 0.3s; /* Плавный переход для эффектов */
+}
+
+#board td:hover {
+    background-color: #e9e9e9; /* Изменение фона при наведении */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Увеличиваем тень для эффекта приподнятости */
+}

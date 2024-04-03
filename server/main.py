@@ -1,4 +1,6 @@
 from typing import List
+
+import uvicorn
 from fastapi import FastAPI, WebSocket, status
 from starlette.websockets import WebSocketDisconnect
 import json
@@ -7,13 +9,9 @@ import json
 app = FastAPI()
 
 
-def init_board():
+def init_board(len=15):
     # create empty board
-    return [
-        None, None, None,
-        None, None, None,
-        None, None, None,
-    ]
+    return [None] * 15 ** 2
 
 
 board = init_board()
@@ -119,9 +117,14 @@ async def websocket_endpoint(websocket: WebSocket):
             # here we are waiting for an oncomming message from clients
             data = await websocket.receive_text()
             data = json.loads(data)
+            print(data)
             # precessing the incomming message
             await update_board(manager, data)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except:
         pass
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
