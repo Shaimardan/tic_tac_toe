@@ -1,57 +1,25 @@
 from typing import List
 
 import uvicorn
-from fastapi import FastAPI, WebSocket, status
+from fastapi import FastAPI, WebSocket
 from starlette.websockets import WebSocketDisconnect
 import json
 
+from tic_tac_toe_game.logic import TicTacToe
+from tic_tac_toe_game.player_type import Player
 
 app = FastAPI()
 
 
-def init_board(len=15):
-    # create empty board
-    return [None] * 15 ** 2
-
-
-board = init_board()
-
-
-def is_draw():
-    # checks if a draw
-    global board
-    for cell in board:
-        if not cell:
-            return False
-    board = init_board()
-    return True
-
-
-def if_won():
-    # check if some player has just won the game
-    global board
-    if board[0] == board[1] == board[2] != None or \
-            board[3] == board[4] == board[5] != None or \
-            board[6] == board[7] == board[8] != None or \
-            board[0] == board[3] == board[6] != None or \
-            board[1] == board[4] == board[7] != None or \
-            board[2] == board[5] == board[8] != None or \
-            board[0] == board[4] == board[8] != None or \
-            board[6] == board[4] == board[2] != None:
-        board = init_board()
-        return True
-    return False
+board = TicTacToe()
 
 
 async def update_board(manager, data):
     ind = int(data['cell']) - 1
     data['init'] = False
-    if not board[ind]:
-        # cell is empty
-        board[ind] = data['player']
-        if is_draw():
-            data['message'] = "draw"
-        elif if_won():
+    if not board.board[ind]:
+        board.board[ind] = data['player']
+        if board.check_winner(data['player'], ind):
             data['message'] = "won"
         else:
             data['message'] = "move"
@@ -67,33 +35,27 @@ class ConnectionManager:
         self.connections: List[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
-        # dealing with incomming connections here
         if len(self.connections) >= 2:
-            # denies connection for 3rd player
             await websocket.accept()
             await websocket.close(4000)
         else:
             await websocket.accept()
-            # adding the connections to the connection's list
             self.connections.append(websocket)
             if len(self.connections) == 1:
-                # the first connected persone plays by X and should wait for a second player
                 await websocket.send_json({
                     'init': True,
-                    'player': 'X',
+                    'player': Player.Player_X.value,
                     'message': 'Waiting for another player',
                 })
             else:
-                # the second player plays by O
                 await websocket.send_json({
                     'init': True,
-                    'player': 'O',
-                    'message': '',
+                    'player': Player.Player_O.value,
+                    'message': 'Your turn!',
                 })
-                # signals to the first player that the second player has just connected
                 await self.connections[0].send_json({
                     'init': True,
-                    'player': 'X',
+                    'player': Player.Player_X.value,
                     'message': 'Your turn!',
                 })
 
@@ -101,7 +63,6 @@ class ConnectionManager:
         self.connections.remove(websocket)
 
     async def broadcast(self, data: str):
-        # broadcasting data to all connected clients
         for connection in self.connections:
             await connection.send_json(data)
 
@@ -114,14 +75,12 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
-            # here we are waiting for an oncomming message from clients
             data = await websocket.receive_text()
             data = json.loads(data)
             print(data)
-            # precessing the incomming message
             await update_board(manager, data)
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        await manager.disconnect(websocket)
     except:
         pass
 

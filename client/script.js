@@ -9,10 +9,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const tr = document.createElement('tr');
             for (let j = 0; j < 15; j++) {
                 const td = document.createElement('td');
-                let counterId = counter++; // Используем let для создания уникальной переменной для каждой итерации цикла
+                let counterId = counter++;
                 td.setAttribute('id', counterId);
                 td.onclick = function() { cellClick(counterId); };
-                td.textContent = '*';
+                td.textContent = '';
                 tr.appendChild(td);
             }
             table.appendChild(tr);
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function checkCell(cell) {
-        if (cell.innerHTML == '*' & player == currentPlayer) {
+        if (cell.innerHTML == '' & player == currentPlayer) {
             return true
         }
         return false
